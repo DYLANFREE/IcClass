@@ -1,0 +1,30 @@
+
+// DFINITY Canister 软件开发工具包 (SDK)下载安装
+sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+//查询是否安装成功
+dfx --version
+
+//老师还会有设置环境变量的路径的操作，我直接在根目录下运行，跳过此步
+
+//创建一个叫mysite的新项目
+dfx new mysite
+
+//跳转到该目录下
+cd mysite
+
+//创建一个html文件
+echo '<html><body><h1>hello everyone</h1></bdoy></html>'  
+> src/mysite_assets/assets/inde.html
+
+//开始本地部署，启动本地容器执行环境
+dfx start 
+
+//在这一步由于网络链接问题，导致出现了颇多障碍，被迫解锁了dfx start --clean和dfx start -emulator
+
+
+//注册、构建和部署
+dfx deploy
+
+//在网页打开mysite_assets的canisterID
+http://127.0.0.1:8000/?canisterId=r7inp-6aaaa-aaaaa-aaabq-cai
