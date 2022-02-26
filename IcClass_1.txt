@@ -13,7 +13,7 @@ dfx new mysite
 //跳转到该目录下
 cd mysite
 
-//创建一个html文件
+//创建一个html文件，输入指令到index.html
 echo '<html><body><h1>hello everyone</h1></bdoy></html>'  
 > src/mysite_assets/assets/inde.html
 
@@ -21,7 +21,6 @@ echo '<html><body><h1>hello everyone</h1></bdoy></html>'
 dfx start 
 
 //在这一步由于网络链接问题，导致出现了颇多障碍，被迫解锁了dfx start --clean和dfx start -emulator
-
 
 //注册、构建和部署
 dfx deploy
