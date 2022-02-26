@@ -22,7 +22,7 @@ func sortBy<X>(xs : [X], f : (X, X) -> Order) : [X] {
     };
   };
 
-private func sortByHelper<X> (
+func sortByHelper<X> (
     xs : [var X],
     l : Int,
     r : Int,
