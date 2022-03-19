@@ -1,0 +1,104 @@
+import Iter "mo:base/Iter";
+import List "mo:base/List";
+import Principal "mo:base/Principal";
+import Text "mo:base/Text";
+import Time "mo:base/Time";
+import Float "mo:base/Float";
+import Int "mo:base/Int";
+
+actor {
+   public type Message = {
+     //添加auhtor字段
+        author: Text;
+        text: Text;
+        time: Time.Time;
+   };
+
+//声明Microblog的类型是一个actor的对象
+   public type Microblog = actor {
+       follow: shared(Principal) -> async ();//添加关注对象
+       follows: shared query () -> async [Principal];//返回关注列表
+       post:shared(Text)->async();//发布新消息
+       posts:shared query(Time.Time)->async[Message];//返回所有发布的消息
+       timeline : shared (Time.Time) ->async [Message];//返回所有关注对象发布的消息
+       set_name : shared (Text) -> async ();//设置名字
+       get_name : shared () -> async ?Text;//查询名字
+   };
+
+//定义一个名为followed的链表，实现关注对象的存储与返回
+//stable 在升级的时候保留所有变量的值
+   stable var followed : List.List<Principal> = List.nil();
+
+//声明一个函数，输入id,执行将id输入followed链表，功能关注了一个对象（输入函数的id）
+   public shared func follow(id: Principal) : async () {
+        //将id放进followed链表
+       followed :=List.push(id,followed);
+   };
+
+//声明一个函数，返回一个ID数组，关注了谁的列表
+   public shared query func follows() : async [Principal] {
+       List.toArray(followed);
+   };
+
+//声明一个messages链表
+   var messages : List.List<Message> = List.nil();
+   var name : Text = "";
+
+//输入名字，设置当前使用者的名字为name
+public shared func set_name(new_name : Text) : async () {
+      name :=new_name;
+};
+
+//调用get_name,返回当前博客作者的名字
+public shared query func get_name() : async ?Text {
+  ?name;
+};
+
+//声明一个函数，输入消息字符串，执行将消息输入messages链表，发送一个消息
+   public shared(msg) func post(otp: Text,text :Text) : async () {
+      assert(otp == "123456"); 
+       //添加time和author字段，记录发消息时间和作者
+       let m1 = {
+           author =name;
+           text=text;
+           time=Time.now();
+       };
+       messages := List.push(m1,messages);
+   };
+//声明一个函数，返回message数组，返回已发送信息的列表
+   public shared func posts(since :Time.Time) :async [Message] {
+       var aftermessages : List.List<Message> = List.nil();
+       let msgs = List.toArray(messages);
+       for (msg in Iter.fromArray(msgs)) {
+                if(msg.time >= since){
+                aftermessages := List.push(msg,aftermessages);  
+                };
+           };
+        List.toArray(aftermessages);
+   };
+//声明一个时间线函数，返回一个canister的消息数组
+   public shared func timeline(since:Time.Time) : async [Message]{
+       //定义一个函数内使用的链表all，用来存储消息
+       var all :List.List<Message> = List.nil();
+       //遍历所有id
+       for (id in Iter.fromList(followed)) {
+
+           //actor关键字当成函数使用，给id生成canister
+           let canister : Microblog = actor(Principal.toText(id));
+
+           //声明一个变量，因为调用的方法posts是async异步的，所以返回的值需要await
+           //将关注对象的消息列表赋值给msgs
+           let msgs =await canister.posts(since);
+            //将大于指定时间的消息推送到all链表
+           for (msg in Iter.fromArray(msgs)) {
+               if(msg.time >= since){
+                all := List.push(msg,all);
+               }; 
+           };
+       };
+       //将链表转变成数组返回
+        List.toArray(all);
+   };
+};
+
+
